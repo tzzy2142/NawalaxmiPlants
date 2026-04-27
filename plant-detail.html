@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Plant Details | Nawalaxmi Plants</title>
+  
+  <!-- Google Fonts: Playfair Display & Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
+  
+  <style>
+
+.highlight-box {
+  background-color: #e8f5e9;
+  border-left: 4px solid #2d6a4f;
+  padding: 12px 16px;
+  border-radius: 8px;
+}
+
+    /* ============================================================
+       DESIGN SYSTEM (Matches index.html)
+       ============================================================ */
+html {
+  zoom: 0.8;
+}
+    :root {
+      --background: #ffffff;
+      --surface: #f7f6f2;
+      --primary: #1a3d2b;
+      --accent: #4a7c59;
+      --light-green: #e8f0e9;
+      --text-primary: #0d0d0d;
+      --text-secondary: #5a5a5a;
+      --border: #e8e8e8;
+      --white: #ffffff;
+      --transition: all 400ms cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Inter', sans-serif; background-color: var(--background); color: var(--text-primary); line-height: 1.6; }
+    h1, h2, h3, .playfair { font-family: 'Playfair Display', serif; }
+    a { text-decoration: none; color: inherit; }
+    button { cursor: pointer; border: none; font-family: inherit; }
+    img { max-width: 100%; display: block; }
+
+    /* Navigation */
+    nav {
+      position: sticky; top: 0; left: 0; width: 100%;
+      background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px);
+      box-shadow: 0 1px 10px rgba(0,0,0,0.05); padding: 1rem 5%;
+      display: flex; justify-content: space-between; align-items: center; z-index: 100;
+    }
+    .back-link { font-weight: 500; color: var(--text-secondary); transition: var(--transition); }
+    .back-link:hover { color: var(--primary); }
+    .btn-whatsapp { background: var(--primary); color: var(--white); padding: 0.6rem 1.2rem; border-radius: 40px; font-weight: 500; transition: var(--transition); }
+    .btn-whatsapp:hover { background: var(--accent); }
+
+    /* ============================================================
+       DETAIL SECTION LAYOUT
+       ============================================================ */
+    .detail-container {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 4rem;
+      padding: 4rem 5%; max-width: 1400px; margin: 0 auto;
+    }
+    @media (max-width: 900px) { .detail-container { grid-template-columns: 1fr; gap: 2rem; } }
+
+    /* Left Gallery */
+    .gallery { display: flex; flex-direction: column; gap: 1rem; }
+    .main-image {
+      width: 100%; aspect-ratio: 4/5; border-radius: 16px; overflow: hidden;
+      background: var(--surface);
+    }
+    .main-image img { width: 100%; height: 100%; object-fit: cover; transition: opacity 0.3s ease; }
+    .thumbnails { display: flex; gap: 1rem; overflow-x: auto; padding-bottom: 0.5rem; }
+    .thumb {
+      width: 80px; height: 80px; border-radius: 8px; cursor: pointer;
+      opacity: 0.6; transition: var(--transition); object-fit: cover;
+      border: 2px solid transparent;
+    }
+    .thumb.active, .thumb:hover { opacity: 1; border-color: var(--primary); }
+
+    /* Right Info Panel */
+    .info { display: flex; flex-direction: column; gap: 1.5rem; justify-content: center; }
+    .category-badge { display: inline-block; background: var(--surface); padding: 0.4rem 1rem; border-radius: 20px; font-size: 0.9rem; font-weight: 600; width: max-content; }
+    .title { font-size: clamp(2.5rem, 4vw, 3.5rem); line-height: 1.1; color: var(--primary); }
+    .price { font-size: 2rem; font-weight: 600; color: var(--accent); }
+    .meta { font-size: 1rem; color: var(--text-secondary); display: flex; gap: 1rem; align-items: center; }
+    .stars { color: #f5c518; letter-spacing: 2px; }
+    .description { font-size: 1.1rem; color: var(--text-secondary); }
+    .care-tip { background: var(--light-green); padding: 1.5rem; border-radius: 12px; border-left: 4px solid var(--accent); }
+    
+    /* Action Buttons */
+    .actions { display: flex; flex-direction: column; gap: 1rem; margin-top: 1rem; }
+    .btn-huge {
+      background: var(--primary); color: var(--white); text-align: center;
+      padding: 1.2rem; border-radius: 12px; font-size: 1.2rem; font-weight: 600;
+      transition: var(--transition); display: block;
+    }
+    .btn-huge:hover { transform: translateY(-3px); box-shadow: 0 10px 20px rgba(26,61,43,0.2); }
+    .btn-secondary {
+      background: var(--white); color: var(--primary); border: 2px solid var(--primary);
+      text-align: center; padding: 1rem; border-radius: 12px; font-weight: 600;
+      transition: var(--transition); display: block;
+    }
+    .btn-secondary:hover { background: var(--surface); }
+    .trust-text { font-size: 0.85rem; color: var(--text-muted); text-align: center; }
+
+    /* ============================================================
+       RELATED SECTION (Matches Index grid)
+       ============================================================ */
+    .related { padding: 4rem 5%; background: var(--surface); }
+    .related h2 { font-size: 2.5rem; text-align: center; margin-bottom: 3rem; color: var(--primary); }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 2rem; }
+    .card { background: var(--white); border-radius: 12px; overflow: hidden; cursor: pointer; transition: var(--transition); padding-bottom: 1.5rem; }
+    .card-img-wrap { aspect-ratio: 4/5; overflow: hidden; margin-bottom: 1rem; }
+    .card img { width: 100%; height: 100%; object-fit: cover; transition: var(--transition); }
+    .card:hover img { transform: scale(1.05); }
+    .card-content { padding: 0 1.5rem; }
+    .card-title { font-size: 1.3rem; margin-bottom: 0.5rem; }
+    .card-price { font-weight: 600; color: var(--accent); }
+
+    /* Error State */
+    .error-state { text-align: center; padding: 10rem 5%; }
+    .error-state h1 { margin-bottom: 1rem; }
+    
+    /* Footer */
+    footer { background: var(--text-primary); color: var(--white); padding: 3rem 5%; text-align: center; }
+  </style>
+</head>
+<body>
+
+  <!-- NAVIGATION -->
+  <nav>
+    <a href="index.html#plants" class="back-link">← Back to Plants</a>
+    <a href="#" class="btn-whatsapp" id="nav-whatsapp">WhatsApp Us</a>
+  </nav>
+
+  <!-- CONTENT CONTAINER (Injected via JS) -->
+  <div id="content-container"></div>
+
+  <!-- FOOTER -->
+  <footer>
+    <p class="playfair" style="font-size: 1.5rem; margin-bottom: 1rem;">Nawalaxmi Plants</p>
+    <p style="opacity: 0.7; font-size: 0.9rem;">&copy; 2026 Nawalaxmi Plants. All rights reserved.</p>
+  </footer>
+
+  <script>
+    // ============================================================
+    // NAWALAXMI PLANTS — PLANT MANAGER (Must match index.html)
+    // ============================================================
+    const PLANTS = [
+      {
+        id: 1,
+        name: "Money Plant",
+        category: "Indoor",
+        lifestyle: ["beginner", "low-light"],
+        price: 150,
+        height: "20–40 cm",
+        description: "The Money Plant is one of the most popular and easy-to-grow houseplants in Nepal. It thrives in both water and soil, making it perfect for beginners. Known to bring good luck and positive energy.",
+        images: [
+          "https://placehold.co/800x800/2d6a4f/white?text=Money+Plant",
+          "https://placehold.co/800x800/2d6a4f/white?text=Money+Plant+2",
+          "https://placehold.co/800x800/2d6a4f/white?text=Money+Plant+3"
+        ],
+        Highlight: "Thrives in water or soil, very forgiving",
+        whatsappMessage: "Hi! I'm interested in ordering Money Plant (NPR 150) from Nawalaxmi Plants 🌿 Could you tell me more about availability?"
+      },
+      {
+        id: 2,
+        name: "Snake Plant",
+        category: "Indoor",
+        lifestyle: ["beginner", "low-light"],
+        price: 300,
+        height: "40–90 cm",
+        description: "The Snake Plant is virtually indestructible and one of the best air-purifying plants available. It releases oxygen at night making it perfect for bedrooms. Ideal for busy people or first-time plant owners.",
+        images: [
+          "https://placehold.co/800x800/1a3d2b/white?text=Snake+Plant",
+          "https://placehold.co/800x800/1a3d2b/white?text=Snake+Plant+2"
+        ],
+        Highlight: "Almost impossible to kill, purifies air",
+        whatsappMessage: "Hi! I'm interested in ordering Snake Plant (NPR 300) from Nawalaxmi Plants 🌿 Could you tell me more about availability?"
+      },
+      {
+        id: 3,
+        name: "Peace Lily",
+        category: "Indoor",
+        lifestyle: ["low-light", "flowers"],
+        price: 450,
+        height: "45–65 cm",
+        description: "The Peace Lily is an elegant flowering plant that thrives in shade. Its white blooms are sophisticated and calming, making it perfect for living rooms and offices. One of the few flowering plants that does well in low light.",
+        images: [
+          "https://placehold.co/800x800/2d6a4f/white?text=Peace+Lily",
+          "https://placehold.co/800x800/2d6a4f/white?text=Peace+Lily+2"
+        ],
+        Highlight: "White elegant flowers, loves shade",
+        whatsappMessage: "Hi! I'm interested in ordering Peace Lily (NPR 450) from Nawalaxmi Plants 🌿 Could you tell me more about availability?"
+      },
+      {
+        id: 4,
+        name: "Marigold",
+        category: "Outdoor",
+        lifestyle: ["beginner", "flowers"],
+        price: 80,
+        height: "30–50 cm",
+        description: "Marigolds are cheerful, vibrant flowers that brighten up any outdoor space. Easy to grow and maintain, they are also known to repel insects naturally. Perfect for gardens, balconies, and pots.",
+        images: [
+          "https://placehold.co/800x800/4a7c59/white?text=Marigold",
+          "https://placehold.co/800x800/4a7c59/white?text=Marigold+2"
+        ],
+        Highlight: "Bright and cheerful, easy to grow outdoors",
+        whatsappMessage: "Hi! I'm interested in ordering Marigold (NPR 80) from Nawalaxmi Plants 🌿 Could you tell me more about availability?"
+      },
+      {
+        id: 5,
+        name: "Rose Bush",
+        category: "Outdoor",
+        lifestyle: ["flowers"],
+        price: 500,
+        height: "60–120 cm",
+        description: "The classic Rose Bush brings timeless beauty to any garden. Our rose bushes are hardy, well-rooted, and ready to bloom. Available in red and pink varieties. Needs full sunlight and regular watering.",
+        images: [
+          "https://placehold.co/800x800/1a3d2b/white?text=Rose+Bush",
+          "https://placehold.co/800x800/1a3d2b/white?text=Rose+Bush+2"
+        ],
+        Highlight: "Classic beauty, needs full sunlight",
+        whatsappMessage: "Hi! I'm interested in ordering Rose Bush (NPR 500) from Nawalaxmi Plants 🌿 Could you tell me more about availability?"
+      },
+      {
+        id: 6,
+        name: "Bamboo Plant",
+        category: "Indoor",
+        lifestyle: ["beginner", "low-light"],
+        price: 200,
+        height: "30–60 cm",
+        description: "Lucky Bamboo is a popular indoor plant believed to bring fortune and positive energy. It grows elegantly in water or soil and requires minimal care. Perfect as a gift or home decor piece.",
+        images: [
+          "https://placehold.co/800x800/2d6a4f/white?text=Bamboo",
+          "https://placehold.co/800x800/2d6a4f/white?text=Bamboo+2"
+        ],
+        Highlight: "Lucky plant, grows beautifully in water",
+        whatsappMessage: "Hi! I'm interested in ordering Bamboo Plant (NPR 200) from Nawalaxmi Plants 🌿 Could you tell me more about availability?"
+      },
+ {
+        id: 7,
+        name: "Orange",
+        category: "Fruit",
+        lifestyle: ["fruit"],
+        price: 150,
+        height: "20–40 cm",
+        description: "The Orannge Plant is one of the most popular and easy-to-grow houseplants in Nepal. It thrives in both water and soil, making it perfect for beginners. Known to bring good luck and positive energy.",
+        images: [
+          "./images/orange.jpg",
+          "https://placehold.co/800x800/2d6a4f/white?text=Money+Plant+2",
+          "https://placehold.co/800x800/2d6a4f/white?text=Money+Plant+3"
+        ],
+        Highlight: "Thrives in water or soil, very forgiving",
+        whatsappMessage: "Hi! I'm interested in ordering Money Plant (NPR 150) from Nawalaxmi Plants 🌿 Could you tell me more about availability?"
+      },
+{
+id: 8,
+        name: "Guava",
+        category: "Fruit",
+        lifestyle: ["outdoor","fruit"],
+        price: 150,
+        height: "20–40 cm",
+        description: "The Orannge Plant is one of the most popular and easy-to-grow houseplants in Nepal. It thrives in both water and soil, making it perfect for beginners. Known to bring good luck and positive energy.",
+        images: [
+          "./images/guava.jpg",
+          "https://placehold.co/800x800/2d6a4f/white?text=Money+Plant+2",
+          "https://placehold.co/800x800/2d6a4f/white?text=Money+Plant+3"
+        ],
+        Highlight: "Thrives in water or soil, very forgiving",
+        whatsappMessage: "Hi! I'm interested in ordering Money Plant (NPR 150) from Nawalaxmi Plants 🌿 Could you tell me more about availability?"
+      },
+{
+ id: 9,
+        name: "Avocado",
+        category: "Fruit",
+        lifestyle: ["outdoor","fruit"],
+        price: 150,
+        height: "20–40 cm",
+        description: "The Orannge Plant is one of the most popular and easy-to-grow houseplants in Nepal. It thrives in both water and soil, making it perfect for beginners. Known to bring good luck and positive energy.",
+        images: [
+          "./images/avocado.jpg",
+          "https://placehold.co/800x800/2d6a4f/white?text=Money+Plant+2",
+          "https://placehold.co/800x800/2d6a4f/white?text=Money+Plant+3"
+        ],
+        Highlight: "Thrives in water or soil, very forgiving",
+        whatsappMessage: "Hi! I'm interested in ordering Money Plant (NPR 150) from Nawalaxmi Plants 🌿 Could you tell me more about availability?"
+      },
+{
+ id: 10,
+        name: "Lemon",
+        category: "Fruit",
+        lifestyle: ["outdoor","fruit"],
+        price: 150,
+        height: "20–40 cm",
+        description: "The Orannge Plant is one of the most popular and easy-to-grow houseplants in Nepal. It thrives in both water and soil, making it perfect for beginners. Known to bring good luck and positive energy.",
+        images: [
+          "./images/lemon.jpg",
+          "https://placehold.co/800x800/2d6a4f/white?text=Money+Plant+2",
+          "https://placehold.co/800x800/2d6a4f/white?text=Money+Plant+3"
+        ],
+        Highlight: "Thrives in water or soil, very forgiving",
+        whatsappMessage: "Hi! I'm interested in ordering Money Plant (NPR 150) from Nawalaxmi Plants 🌿 Could you tell me more about availability?"
+      },
+{
+ id: 11,
+        name: "Muntala",
+        category: "Fruit",
+        lifestyle: ["outdoor","fruit"],
+        price: 150,
+        height: "20–40 cm",
+        description: "The Orannge Plant is one of the most popular and easy-to-grow houseplants in Nepal. It thrives in both water and soil, making it perfect for beginners. Known to bring good luck and positive energy.",
+
+
+        images: [
+          "./images/muntala.jpg",
+          "https://placehold.co/800x800/2d6a4f/white?text=Money+Plant+2",
+          "https://placehold.co/800x800/2d6a4f/white?text=Money+Plant+3"
+        ],
+        Highlight: "Thrives in water or soil, very forgiving",
+        whatsappMessage: "Hi! I'm interested in ordering Money Plant (NPR 150) from Nawalaxmi Plants 🌿 Could you tell me more about availability?"
+      },
+{
+ id: 12,
+        name: "Papaya",
+        category: "Fruit",
+        lifestyle: ["outdoor","fruit"],
+        price: 150,
+        height: "20–40 cm",
+        description: "The Orannge Plant is one of the most popular and easy-to-grow houseplants in Nepal. It thrives in both water and soil, making it perfect for beginners. Known to bring good luck and positive energy.",
+        images: [
+          "./images/papaya.jpg",
+"./images/papaya2.jpg",
+"./images/papaya3.jpg",
+
+          
+        ],
+        Highlight: "Thrives in water or soil, very forgiving",
+        whatsappMessage: "Hi! I'm interested in ordering Money Plant (NPR 150) from Nawalaxmi Plants 🌿 Could you tell me more about availability?"
+      },
+
+    ];
+
+    // ============================================================
+    // SITE SETTINGS
+    // ============================================================
+    const WHATSAPP_NUMBER = "9779741664660"; 
+    
+    // Set global WhatsApp Nav link
+    document.getElementById('nav-whatsapp').href = `https://wa.me/${WHATSAPP_NUMBER}`;
+
+    // Get ID from URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const plantId = parseInt(urlParams.get('id'));
+    const plant = PLANTS.find(p => p.id === plantId);
+    const container = document.getElementById('content-container');
+
+    if (!plant) {
+      // 404 State
+      container.innerHTML = `
+        <div class="error-state">
+          <h1 class="playfair">Plant Not Found</h1>
+          <p>We couldn't find the plant you're looking for.</p>
+          <br>
+          <a href="index.html#plants" class="btn-whatsapp">Return to Catalogue</a>
+        </div>
+      `;
+    } else {
+      // Render Details
+      document.title = `${plant.name} | Nawalaxmi Plants`;
+
+      // Generate Thumbnails HTML
+      const thumbsHtml = plant.images.map((img, index) => 
+        `<img src="${img}" class="thumb ${index === 0 ? 'active' : ''}" data-src="${img}" alt="Thumbnail">`
+      ).join('');
+
+      // Generate Questions message
+      const questionMessage = `Hi! I have a question about ${plant.name} from Nawalaxmi Plants 🌿`;
+
+      // Find Related Plants (Same category, excluding current)
+      let related = PLANTS.filter(p => p.category === plant.category && p.id !== plant.id).slice(0, 3);
+      if(related.length < 3) {
+        // If not enough in category, just fill with others
+        const fillers = PLANTS.filter(p => p.id !== plant.id && !related.includes(p)).slice(0, 3 - related.length);
+        related = [...related, ...fillers];
+      }
+
+      const relatedHtml = related.map(p => `
+        <div class="card" onclick="window.location.href='plant-detail.html?id=${p.id}'">
+          <div class="card-img-wrap"><img src="${p.images[0]}" alt="${p.name}"></div>
+          <div class="card-content">
+            <h3 class="card-title playfair">${p.name}</h3>
+            <p class="card-price">NPR ${p.price}</p>
+          </div>
+        </div>
+      `).join('');
+
+      // Inject Layout
+      container.innerHTML = `
+        <div class="detail-container">
+          <!-- Left Gallery -->
+          <div class="gallery">
+            <div class="main-image">
+              <img id="main-photo" src="${plant.images[0]}" alt="${plant.name}">
+            </div>
+            <div class="thumbnails" id="thumb-strip">
+              <!-- TO ADD MORE PHOTOS: update images array in PLANTS data -->
+              ${thumbsHtml}
+            </div>
+          </div>
+
+          <!-- Right Info -->
+          <div class="info">
+            <span class="category-badge">${plant.category}</span>
+            <h1 class="title">${plant.name}</h1>
+            <div class="meta">
+              <span class="stars">★★★★★</span>
+              <span>📏 Height: ${plant.height}</span>
+            </div>
+            <div class="price">NPR ${plant.price}</div>
+            
+            <!-- TO EDIT DESCRIPTION: update description in PLANTS data -->
+            <p class="description">${plant.description}</p>
+
+    <div class="highlight-box">
+  🌿 <strong>Highlight:</strong> ${plant.Highlight}
+</div>
+            <!-- TO CHANGE WHATSAPP NUMBER: update WHATSAPP_NUMBER variable above -->
+            <div class="actions">
+              <a href="https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(plant.whatsappMessage)}" target="_blank" class="btn-huge">
+                Order via WhatsApp 💬
+              </a>
+              <a href="https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(questionMessage)}" target="_blank" class="btn-secondary">
+                Ask a Question
+              </a>
+              <p class="trust-text">✓ Direct chat with the nursery · ✓ No middleman · ✓ Delivery across Nepal</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Related Section -->
+        <div class="related">
+          <h2 class="playfair">You might also like</h2>
+          <div class="grid">
+            ${relatedHtml}
+          </div>
+        </div>
+      `;
+
+      // Gallery Thumbnail Click Logic
+      const mainPhoto = document.getElementById('main-photo');
+      const thumbs = document.querySelectorAll('.thumb');
+      
+      thumbs.forEach(thumb => {
+        thumb.addEventListener('click', function() {
+          // Remove active class
+          thumbs.forEach(t => t.classList.remove('active'));
+          // Add to clicked
+          this.classList.add('active');
+          // Swap image with fade
+          mainPhoto.style.opacity = 0;
+          setTimeout(() => {
+            mainPhoto.src = this.getAttribute('data-src');
+            mainPhoto.style.opacity = 1;
+          }, 150);
+        });
+      });
+    }
+  </script>
+</body>
+</html>

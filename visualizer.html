@@ -1,0 +1,1051 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Room Visualizer | Nawalaxmi Plants</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #1a3d2b;
+            --accent: #4a7c59;
+            --background: #f0ede6;
+            --surface: #ffffff;
+            --border-color: #e8e8e8;
+            --text-primary: #0d0d0d;
+            --text-secondary: #5a5a5a;
+            --text-muted: #9a9a9a;
+            --white: #ffffff;
+            --font-body: 'Inter', sans-serif;
+        }
+
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--font-body);
+            height: 100vh;
+            overflow: hidden;
+            background-color: var(--background);
+            color: var(--text-primary);
+            font-size: 14px;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        .visualizer-layout {
+            display: grid;
+            grid-template-columns: 260px 1fr 260px;
+            height: 100vh;
+        }
+
+        /* --- Left Sidebar --- */
+        .left-sidebar {
+            background-color: var(--primary);
+            color: var(--white);
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .left-sidebar h1 {
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .left-sidebar .sub-header {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.6);
+            margin-top: 4px;
+        }
+
+        .search-input {
+            width: 100%;
+            background-color: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: var(--white);
+            border-radius: 8px;
+            padding: 8px 12px;
+            margin: 12px 0;
+            font-family: inherit;
+        }
+        .search-input::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+        .search-input:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        .filter-row {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .filter-btn {
+            flex-grow: 1;
+            padding: 6px 10px;
+            font-size: 12px;
+            border-radius: 99px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background-color: transparent;
+            color: var(--white);
+            border: 1px solid var(--white);
+        }
+
+        .filter-btn.active {
+            background-color: var(--white);
+            color: var(--primary);
+            font-weight: 600;
+        }
+
+        .plant-list {
+            flex-grow: 1;
+            overflow-y: auto;
+            margin-right: -8px;
+            padding-right: 8px;
+        }
+        /* Custom scrollbar for webkit browsers */
+        .plant-list::-webkit-scrollbar {
+            width: 6px;
+        }
+        .plant-list::-webkit-scrollbar-track {
+            background: rgba(0,0,0,0.1);
+            border-radius: 3px;
+        }
+        .plant-list::-webkit-scrollbar-thumb {
+            background: rgba(255,255,255,0.3);
+            border-radius: 3px;
+        }
+        .plant-list::-webkit-scrollbar-thumb:hover {
+            background: rgba(255,255,255,0.5);
+        }
+
+        .plant-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 8px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-bottom: 6px;
+            border: 2px solid transparent;
+            position: relative;
+        }
+
+        .plant-item:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .plant-item.selected {
+            background-color: rgba(255, 255, 255, 0.2);
+            border-color: var(--white);
+        }
+        
+        .plant-item .checkmark {
+            display: none;
+            position: absolute;
+            top: 4px;
+            right: 2px;
+            width: 16px;
+            height: 16px;
+            background-color: var(--accent);
+            border-radius: 50%;
+            align-items: center;
+            justify-content: center;
+        }
+        .plant-item.selected .checkmark {
+            display: flex;
+        }
+
+        .plant-item-img {
+            width: 48px;
+            height: 48px;
+            border-radius: 6px;
+            object-fit: cover;
+            flex-shrink: 0;
+        }
+
+        .plant-item-info .name {
+            font-weight: 600;
+            font-size: 14px;
+            display: block;
+        }
+
+        .plant-item-info .price {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 13px;
+        }
+        
+        .back-link {
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+            color: rgba(255, 255, 255, 0.7);
+            text-decoration: none;
+            font-size: 13px;
+            transition: color 0.2s ease;
+        }
+        .back-link:hover {
+            color: var(--white);
+        }
+
+        /* --- Center Canvas --- */
+        .canvas-area {
+            background-color: var(--background);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        #room-photo-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            z-index: 1;
+            display: none;
+        }
+        
+        #plant-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 2;
+        }
+
+        .upload-state {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
+            z-index: 3;
+        }
+        
+        .upload-box {
+            border: 2px dashed #b0c4b8;
+            border-radius: 16px;
+            padding: 40px 60px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 16px;
+            cursor: pointer;
+            background-color: rgba(255, 255, 255, 0.5);
+        }
+        
+        .upload-box.dragover {
+             border-color: var(--accent);
+             background-color: rgba(74, 124, 89, 0.1);
+        }
+
+        .upload-icon {
+            color: var(--accent);
+        }
+
+        .upload-box h2 {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--primary);
+        }
+
+        .upload-box p {
+            font-size: 14px;
+            color: var(--text-secondary);
+            max-width: 280px;
+        }
+
+        .upload-btn {
+            background-color: var(--primary);
+            color: var(--white);
+            padding: 12px 32px;
+            border-radius: 8px;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        
+        #photo-upload {
+            display: none;
+        }
+        
+        .toolbar {
+            height: 44px;
+            background-color: var(--surface);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 16px;
+            position: relative;
+            z-index: 4;
+            flex-shrink: 0;
+        }
+
+        .toolbar button {
+            font-size: 13px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 6px 12px;
+            background-color: var(--surface);
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .toolbar button:hover {
+            background-color: #f5f5f5;
+        }
+        
+        .toolbar .left, .toolbar .right {
+            display: flex;
+            gap: 8px;
+        }
+
+        /* Placed Plant Styling */
+        .placed-plant {
+            position: absolute;
+            width: 150px;
+            height: 150px;
+            cursor: grab;
+            user-select: none;
+            border: 2px solid transparent;
+        }
+        .placed-plant.selected {
+            border-color: var(--accent);
+            z-index: 100;
+        }
+        .placed-plant:hover {
+             box-shadow: 0 0 20px rgba(255,255,255,0.7);
+        }
+        .placed-plant img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            pointer-events: none; /* Important for drag */
+        }
+        .placed-plant .plant-label {
+            position: absolute;
+            bottom: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.6);
+            color: white;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 12px;
+            white-space: nowrap;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        .placed-plant:hover .plant-label {
+            opacity: 1;
+        }
+        
+        .resize-handle {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background-color: var(--primary);
+            border: 1px solid white;
+            display: none;
+        }
+        .placed-plant.selected .resize-handle {
+            display: block;
+        }
+        
+        .resize-handle.tl { top: -5px; left: -5px; cursor: nwse-resize; }
+        .resize-handle.tr { top: -5px; right: -5px; cursor: nesw-resize; }
+        .resize-handle.bl { bottom: -5px; left: -5px; cursor: nesw-resize; }
+        .resize-handle.br { bottom: -5px; right: -5px; cursor: nwse-resize; }
+        .resize-handle.tm { top: -5px; left: 50%; margin-left: -5px; cursor: ns-resize; }
+        .resize-handle.bm { bottom: -5px; left: 50%; margin-left: -5px; cursor: ns-resize; }
+        .resize-handle.ml { top: 50%; left: -5px; margin-top: -5px; cursor: ew-resize; }
+        .resize-handle.mr { top: 50%; right: -5px; margin-top: -5px; cursor: ew-resize; }
+
+        .action-bar {
+            position: absolute;
+            top: -35px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: var(--surface);
+            border-radius: 6px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            display: none;
+            gap: 4px;
+            padding: 4px;
+        }
+        .placed-plant.selected .action-bar {
+            display: flex;
+        }
+
+        .action-bar button {
+            background: none;
+            border: none;
+            padding: 4px 8px;
+            cursor: pointer;
+            font-size: 13px;
+        }
+        .action-bar button:hover {
+            background-color: #f0f0f0;
+            border-radius: 4px;
+        }
+        
+        /* --- Right Sidebar --- */
+        .right-sidebar {
+            background-color: var(--surface);
+            border-left: 1px solid var(--border-color);
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .right-sidebar h2 {
+            font-size: 18px;
+            font-weight: 700;
+        }
+        .right-sidebar .sub-header {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 4px;
+            margin-bottom: 12px;
+        }
+        .divider {
+            height: 1px;
+            background-color: var(--border-color);
+            margin: 8px 0;
+        }
+
+        .design-list-empty, .design-list-container {
+            flex-grow: 1;
+        }
+
+        .design-list-empty {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 13px;
+        }
+        .design-list-empty svg {
+            margin-bottom: 16px;
+        }
+
+        .design-list {
+            overflow-y: auto;
+            height: 100%;
+        }
+
+        .design-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .design-item:last-child {
+            border-bottom: none;
+        }
+        .design-item-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .design-item-img {
+            width: 36px;
+            height: 36px;
+            border-radius: 4px;
+            object-fit: cover;
+        }
+        .design-item-details .name {
+            font-weight: 600;
+            font-size: 14px;
+        }
+        .design-item-details .category {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+        .design-item-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .quantity-badge {
+            background-color: #f0f0f0;
+            border-radius: 4px;
+            padding: 2px 6px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .remove-item-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            color: var(--text-muted);
+        }
+
+        .total-row {
+            margin-top: auto;
+            padding-top: 16px;
+            font-weight: 600;
+        }
+        .total-row .total-content {
+             display: flex;
+             justify-content: space-between;
+             align-items: center;
+             font-size: 16px;
+        }
+        .total-row .total-content .price {
+            font-size: 20px;
+            font-weight: 700;
+        }
+        
+        .whatsapp-btn {
+            width: 100%;
+            background-color: #25D366;
+            color: var(--white);
+            border: none;
+            border-radius: 10px;
+            padding: 14px;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            margin-top: 12px;
+        }
+        .whatsapp-btn:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+
+        .whatsapp-number {
+            font-size: 12px;
+            color: var(--text-muted);
+            text-align: center;
+            margin-top: 8px;
+        }
+        
+        @media (max-width: 1024px) {
+            .visualizer-layout {
+                grid-template-columns: 240px 1fr;
+            }
+            .right-sidebar {
+                display: none; /* Simple hiding for smaller screens */
+            }
+        }
+        @media (max-width: 768px) {
+            .visualizer-layout {
+                grid-template-columns: 1fr;
+                grid-template-rows: 60vh 40vh; /* Canvas top, tools bottom */
+            }
+            .left-sidebar {
+                grid-row: 2;
+            }
+            .canvas-area {
+                grid-row: 1;
+            }
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="visualizer-layout">
+        <aside class="left-sidebar">
+            <h1>Nawalaxmi Plants</h1>
+            <p class="sub-header">Select a plant, then click the canvas</p>
+            <input type="text" id="plant-search" class="search-input" placeholder="Search plants...">
+            <div class="filter-row">
+                <button class="filter-btn active" data-filter="All">All</button>
+                <button class="filter-btn" data-filter="Indoor">Indoor</button>
+                <button class="filter-btn" data-filter="Outdoor">Outdoor</button>
+            </div>
+            <div id="plant-list" class="plant-list">
+                <!-- Plant items will be injected by JS -->
+            </div>
+            <a href="index.html" class="back-link">← Back to Website</a>
+        </aside>
+
+        <main class="canvas-area">
+            <div class="toolbar" id="toolbar" style="display: none;">
+                <div class="left">
+                    <button id="change-photo-btn">Change Photo</button>
+                    <button id="undo-btn">Undo</button>
+                    <button id="clear-all-btn">Clear All</button>
+                </div>
+                <div class="right">
+                    <button id="download-btn">💾 Download Design</button>
+                </div>
+            </div>
+            
+            <div id="plant-container"></div>
+            <img id="room-photo-bg" src="" alt="User's room">
+            
+            <div id="upload-state" class="upload-state">
+                <div id="upload-box" class="upload-box">
+                    <svg class="upload-icon" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                    <h2>Upload Your Room Photo</h2>
+                    <p>Click here or drag and drop a photo of your room, office or café</p>
+                    <button id="upload-btn-proxy" class="upload-btn">Choose Photo</button>
+                    <input type="file" id="photo-upload" accept="image/*">
+                </div>
+            </div>
+        </main>
+
+        <aside class="right-sidebar">
+            <h2>Your Design</h2>
+            <p class="sub-header">Plants you've placed</p>
+            <div class="divider"></div>
+            
+            <div id="design-list-container" class="design-list-container" style="display: none;">
+                <div id="design-list" class="design-list"></div>
+            </div>
+
+            <div id="design-list-empty" class="design-list-empty">
+                 <svg width="80" height="80" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M3 12C3 9.06886 3.65313 6.25744 4.8488 3.82333" stroke="#9a9a9a" stroke-width="1.5" stroke-linecap="round" stroke-dasharray="2 2"/>
+                    <path d="M11 3.0625C13.0645 3.51185 14.9723 4.54516 16.5 6" stroke="#9a9a9a" stroke-width="1.5" stroke-linecap="round"/>
+                    <path d="M16.5 6L14 4.5" stroke="#9a9a9a" stroke-width="1.5" stroke-linecap="round"/>
+                    <path d="M16.5 6L18 7.5" stroke="#9a9a9a" stroke-width="1.5" stroke-linecap="round"/>
+                </svg>
+                <p>Select plants from the left panel and click on your room photo to start designing.</p>
+            </div>
+
+            <div class="total-row">
+                <div class="divider"></div>
+                <div class="total-content">
+                    <span>Total</span>
+                    <span id="total-price" class="price">NPR 0</span>
+                </div>
+            </div>
+
+            <button id="whatsapp-btn" class="whatsapp-btn" disabled>Order on WhatsApp</button>
+            <p class="whatsapp-number">+977-9800000000</p>
+        </aside>
+    </div>
+
+<script>
+// ============================================================
+// NAWALAXMI PLANTS — PLANT DATA
+// ============================================================
+const PLANTS = [
+  { id: 1, name: "Money Plant", category: "Indoor", price: 150, image: "https://placehold.co/200x200/2d6a4f/white?text=Money+Plant" },
+  { id: 2, name: "Snake Plant", category: "Indoor", price: 300, image: "https://placehold.co/200x200/1a3d2b/white?text=Snake+Plant" },
+  { id: 3, name: "Peace Lily", category: "Indoor", price: 450, image: "https://placehold.co/200x200/2d6a4f/white?text=Peace+Lily" },
+  { id: 4, name: "Marigold", category: "Outdoor", price: 80, image: "https://placehold.co/200x200/4a7c59/white?text=Marigold" },
+  { id: 5, name: "Rose Bush", category: "Outdoor", price: 500, image: "https://placehold.co/200x200/1a3d2b/white?text=Rose+Bush" },
+  { id: 6, name: "Bamboo Plant", category: "Indoor", price: 200, image: "https://placehold.co/200x200/2d6a4f/white?text=Bamboo" }
+];
+
+document.addEventListener('DOMContentLoaded', () => {
+
+    const WHATSAPP_NUMBER = '+9779800000000';
+
+    // --- DOM Elements ---
+    const plantListEl = document.getElementById('plant-list');
+    const plantSearchEl = document.getElementById('plant-search');
+    const filterBtns = document.querySelectorAll('.filter-btn');
+    const uploadStateEl = document.getElementById('upload-state');
+    const uploadBoxEl = document.getElementById('upload-box');
+    const uploadBtnProxy = document.getElementById('upload-btn-proxy');
+    const photoUploadInput = document.getElementById('photo-upload');
+    const roomPhotoBgEl = document.getElementById('room-photo-bg');
+    const toolbarEl = document.getElementById('toolbar');
+    const plantContainerEl = document.getElementById('plant-container');
+    const designListContainerEl = document.getElementById('design-list-container');
+    const designListEl = document.getElementById('design-list');
+    const designListEmptyEl = document.getElementById('design-list-empty');
+    const totalPriceEl = document.getElementById('total-price');
+    const whatsappBtn = document.getElementById('whatsapp-btn');
+    const changePhotoBtn = document.getElementById('change-photo-btn');
+    const undoBtn = document.getElementById('undo-btn');
+    const clearAllBtn = document.getElementById('clear-all-btn');
+    const downloadBtn = document.getElementById('download-btn');
+
+    // --- State Management ---
+    let state = {
+        plants: PLANTS,
+        placedPlants: [],
+        selectedPlantId: null,
+        selectedPlacedPlantId: null,
+        filter: {
+            category: 'All',
+            search: ''
+        },
+        history: [],
+    };
+    
+    // --- Render Functions ---
+    function renderPlantList() {
+        const { search, category } = state.filter;
+        const filteredPlants = state.plants.filter(p => 
+            (p.name.toLowerCase().includes(search.toLowerCase())) &&
+            (category === 'All' || p.category === category)
+        );
+
+        plantListEl.innerHTML = filteredPlants.map(p => `
+            <div class="plant-item ${state.selectedPlantId === p.id ? 'selected' : ''}" data-id="${p.id}">
+                <div class="checkmark">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" fill="#fff" viewBox="0 0 16 16"><path d="M10.97 4.97a.75.75 0 0 1 1.07 1.05l-3.99 4.99a.75.75 0 0 1-1.08.02L4.324 8.384a.75.75 0 1 1 1.06-1.06l2.094 2.093 3.473-4.425z"/></svg>
+                </div>
+                <img src="${p.image}" alt="${p.name}" class="plant-item-img">
+                <div class="plant-item-info">
+                    <span class="name">${p.name}</span>
+                    <span class="price">NPR ${p.price}</span>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    function renderPlacedPlants() {
+        plantContainerEl.innerHTML = state.placedPlants.map(p => `
+            <div class="placed-plant ${state.selectedPlacedPlantId === p.instanceId ? 'selected' : ''}" 
+                 data-instance-id="${p.instanceId}" 
+                 style="left: ${p.x}px; top: ${p.y}px; width: ${p.width}px; height: ${p.height}px;">
+                <img src="${p.image}" alt="${p.name}">
+                <div class="plant-label">${p.name}</div>
+                <div class="action-bar">
+                    <button class="action-btn-remove" title="Remove">🗑</button>
+                    <button class="action-btn-larger" title="Larger">＋</button>
+                    <button class="action-btn-smaller" title="Smaller">－</button>
+                </div>
+                <div class="resize-handle tl"></div><div class="resize-handle tr"></div>
+                <div class="resize-handle bl"></div><div class="resize-handle br"></div>
+                <div class="resize-handle tm"></div><div class="resize-handle bm"></div>
+                <div class="resize-handle ml"></div><div class="resize-handle mr"></div>
+            </div>
+        `).join('');
+    }
+
+    function renderDesignSummary() {
+        if (state.placedPlants.length === 0) {
+            designListContainerEl.style.display = 'none';
+            designListEmptyEl.style.display = 'flex';
+            whatsappBtn.disabled = true;
+            totalPriceEl.textContent = 'NPR 0';
+            return;
+        }
+
+        designListContainerEl.style.display = 'block';
+        designListEmptyEl.style.display = 'none';
+        whatsappBtn.disabled = false;
+
+        const grouped = state.placedPlants.reduce((acc, p) => {
+            if (!acc[p.id]) {
+                acc[p.id] = { ...p, quantity: 0, instanceIds: [] };
+            }
+            acc[p.id].quantity++;
+            acc[p.id].instanceIds.push(p.instanceId);
+            return acc;
+        }, {});
+
+        designListEl.innerHTML = Object.values(grouped).map(p => `
+            <div class="design-item">
+                <div class="design-item-info">
+                    <img src="${p.image}" class="design-item-img">
+                    <div class="design-item-details">
+                        <span class="name">${p.name}</span>
+                        <span class="category">${p.category}</span>
+                    </div>
+                </div>
+                <div class="design-item-actions">
+                    <span class="price">NPR ${p.price}</span>
+                    ${p.quantity > 1 ? `<span class="quantity-badge">×${p.quantity}</span>` : ''}
+                    <button class="remove-item-btn" data-id="${p.id}" title="Remove All '${p.name}'">×</button>
+                </div>
+            </div>
+        `).join('');
+
+        const total = state.placedPlants.reduce((sum, p) => sum + p.price, 0);
+        totalPriceEl.textContent = `NPR ${total}`;
+    }
+
+    function updateAllViews() {
+        renderPlantList();
+        renderPlacedPlants();
+        renderDesignSummary();
+    }
+
+    // --- State Changers ---
+    function saveStateToHistory() {
+        state.history.push(JSON.stringify(state.placedPlants));
+    }
+
+    function addPlantToCanvas(plantId, x, y) {
+        saveStateToHistory();
+        const plantData = state.plants.find(p => p.id === plantId);
+        const newPlant = {
+            ...plantData,
+            instanceId: Date.now(),
+            x: x - 75, // center the 150px plant on click
+            y: y - 75,
+            width: 150,
+            height: 150,
+        };
+        state.placedPlants.push(newPlant);
+        state.selectedPlantId = null; // Deselect from sidebar after placing
+        state.selectedPlacedPlantId = newPlant.instanceId;
+        updateAllViews();
+    }
+
+    function removePlacedPlant(instanceId) {
+        saveStateToHistory();
+        state.placedPlants = state.placedPlants.filter(p => p.instanceId !== instanceId);
+        state.selectedPlacedPlantId = null;
+        updateAllViews();
+    }
+    
+    function removeAllPlacedPlantsById(plantId) {
+        saveStateToHistory();
+        state.placedPlants = state.placedPlants.filter(p => p.id !== plantId);
+        state.selectedPlacedPlantId = null;
+        updateAllViews();
+    }
+
+    function clearAllPlacedPlants() {
+        if(state.placedPlants.length > 0) saveStateToHistory();
+        state.placedPlants = [];
+        state.selectedPlacedPlantId = null;
+        updateAllViews();
+    }
+
+    function undoLastAction() {
+        if (state.history.length > 0) {
+            const lastState = state.history.pop();
+            state.placedPlants = JSON.parse(lastState);
+            state.selectedPlacedPlantId = null;
+            updateAllViews();
+        }
+    }
+    
+    // --- Event Handlers ---
+    
+    // Left Sidebar
+    plantListEl.addEventListener('click', (e) => {
+        const item = e.target.closest('.plant-item');
+        if (item) {
+            const id = parseInt(item.dataset.id);
+            state.selectedPlantId = state.selectedPlantId === id ? null : id;
+            updateAllViews();
+        }
+    });
+
+    plantSearchEl.addEventListener('input', () => {
+        state.filter.search = plantSearchEl.value;
+        renderPlantList();
+    });
+
+    filterBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            filterBtns.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            state.filter.category = btn.dataset.filter;
+            renderPlantList();
+        });
+    });
+
+    // Upload Logic
+    function handleFileUpload(file) {
+        if (file && file.type.startsWith('image/')) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                roomPhotoBgEl.src = e.target.result;
+                roomPhotoBgEl.style.display = 'block';
+                uploadStateEl.style.display = 'none';
+                toolbarEl.style.display = 'flex';
+            };
+            reader.readAsDataURL(file);
+        }
+    }
+
+    uploadBtnProxy.addEventListener('click', () => photoUploadInput.click());
+    uploadBoxEl.addEventListener('click', () => photoUploadInput.click());
+    photoUploadInput.addEventListener('change', (e) => handleFileUpload(e.target.files[0]));
+
+    uploadBoxEl.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        uploadBoxEl.classList.add('dragover');
+    });
+    uploadBoxEl.addEventListener('dragleave', () => uploadBoxEl.classList.remove('dragover'));
+    uploadBoxEl.addEventListener('drop', (e) => {
+        e.preventDefault();
+        uploadBoxEl.classList.remove('dragover');
+        handleFileUpload(e.dataTransfer.files[0]);
+    });
+
+    // Toolbar
+    changePhotoBtn.addEventListener('click', () => photoUploadInput.click());
+    undoBtn.addEventListener('click', undoLastAction);
+    clearAllBtn.addEventListener('click', clearAllPlacedPlants);
+    downloadBtn.addEventListener('click', downloadDesign);
+
+    // Canvas Interactions
+    plantContainerEl.addEventListener('click', (e) => {
+        // If clicking on a plant, the mousedown handler will select it.
+        // This handler is for placing new plants or deselecting.
+        if (e.target === plantContainerEl) {
+            if (state.selectedPlantId) {
+                const rect = plantContainerEl.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                addPlantToCanvas(state.selectedPlantId, x, y);
+            } else {
+                state.selectedPlacedPlantId = null;
+                updateAllViews();
+            }
+        }
+    });
+    
+    // Plant Drag, Resize, Actions
+    let dragInfo = null;
+    let resizeInfo = null;
+
+    plantContainerEl.addEventListener('mousedown', (e) => {
+        const targetPlant = e.target.closest('.placed-plant');
+        if (!targetPlant) return;
+
+        e.preventDefault();
+        state.selectedPlacedPlantId = parseInt(targetPlant.dataset.instanceId);
+        updateAllViews();
+
+        const plantData = state.placedPlants.find(p => p.instanceId === state.selectedPlacedPlantId);
+        const startX = e.clientX;
+        const startY = e.clientY;
+        
+        if (e.target.classList.contains('resize-handle')) {
+            resizeInfo = {
+                handle: e.target.classList[1],
+                plant: plantData,
+                startX, startY,
+                startW: plantData.width, startH: plantData.height,
+                startLeft: plantData.x, startTop: plantData.y
+            };
+            saveStateToHistory();
+        } else if (e.target.classList.contains('action-btn-remove')) {
+            removePlacedPlant(state.selectedPlacedPlantId);
+        } else if (e.target.classList.contains('action-btn-larger') || e.target.classList.contains('action-btn-smaller')) {
+            saveStateToHistory();
+            const scale = e.target.classList.contains('action-btn-larger') ? 1.1 : 0.9;
+            plantData.width *= scale;
+            plantData.height *= scale;
+            plantData.x -= (plantData.width * (scale-1)) / 2;
+            plantData.y -= (plantData.height * (scale-1)) / 2;
+            updateAllViews();
+        } else {
+            dragInfo = {
+                plant: plantData,
+                offsetX: startX - plantData.x,
+                offsetY: startY - plantData.y,
+            };
+            saveStateToHistory();
+        }
+    });
+
+    document.addEventListener('mousemove', (e) => {
+        if (dragInfo) {
+            dragInfo.plant.x = e.clientX - dragInfo.offsetX;
+            dragInfo.plant.y = e.clientY - dragInfo.offsetY;
+            renderPlacedPlants();
+        }
+        if(resizeInfo) {
+            const dx = e.clientX - resizeInfo.startX;
+            const dy = e.clientY - resizeInfo.startY;
+            const p = resizeInfo.plant;
+            
+            if (resizeInfo.handle.includes('r')) { p.width = resizeInfo.startW + dx; }
+            if (resizeInfo.handle.includes('l')) { p.width = resizeInfo.startW - dx; p.x = resizeInfo.startLeft + dx; }
+            if (resizeInfo.handle.includes('b')) { p.height = resizeInfo.startH + dy; }
+            if (resizeInfo.handle.includes('t')) { p.height = resizeInfo.startH - dy; p.y = resizeInfo.startTop + dy; }
+            
+            if(p.width < 30) p.width = 30;
+            if(p.height < 30) p.height = 30;
+
+            renderPlacedPlants();
+        }
+    });
+
+    document.addEventListener('mouseup', () => {
+        dragInfo = null;
+        resizeInfo = null;
+    });
+
+    // Right Sidebar
+    designListEl.addEventListener('click', (e) => {
+        if(e.target.classList.contains('remove-item-btn')) {
+            const id = parseInt(e.target.dataset.id);
+            removeAllPlacedPlantsById(id);
+        }
+    });
+
+    whatsappBtn.addEventListener('click', () => {
+        const grouped = state.placedPlants.reduce((acc, p) => {
+            acc[p.name] = (acc[p.name] || 0) + 1;
+            return acc;
+        }, {});
+
+        const orderText = Object.entries(grouped)
+            .map(([name, qty]) => `${name} (x${qty})`)
+            .join(', ');
+
+        const total = state.placedPlants.reduce((sum, p) => sum + p.price, 0);
+
+        const message = `Hi! I've designed a room with Nawalaxmi Plants and would like to order:\n\n${orderText}\n\nTotal: NPR ${total}\n\n(My design is attached)`;
+        window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`, '_blank');
+    });
+
+    // Download functionality
+    async function downloadDesign() {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        const containerRect = plantContainerEl.getBoundingClientRect();
+        canvas.width = containerRect.width;
+        canvas.height = containerRect.height;
+        
+        // Draw background
+        ctx.fillStyle = getComputedStyle(document.body).backgroundColor;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        
+        if (roomPhotoBgEl.style.display !== 'none') {
+            ctx.drawImage(roomPhotoBgEl, 0, 0, canvas.width, canvas.height);
+        }
+
+        // Draw plants
+        for (const plant of state.placedPlants) {
+            const img = new Image();
+            img.crossOrigin = "Anonymous"; // Required for placehold.co
+            img.src = plant.image;
+            await new Promise(resolve => img.onload = resolve);
+            ctx.drawImage(img, plant.x, plant.y, plant.width, plant.height);
+        }
+
+        const link = document.createElement('a');
+        link.download = 'nawalaxmi-design.png';
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+    }
+
+
+    // --- Initial Render ---
+    updateAllViews();
+});
+
+</script>
+
+</body>
+</html>
