@@ -94,19 +94,17 @@
     /* ============================================================
        HERO SECTION
        ============================================================ */
-
 .hero {
-  height: 92vh;
-  min-height: 580px;
-  background-color: var(--surface);
-  display: flex;
-  align-items: center;
-  padding: 0 5% 0 6%;
-  position: relative;
-  overflow: hidden;
-  gap: 2rem;
+    height: 92vh;
+    min-height: 580px;
+    background-color: var(--surface);
+    display: flex;
+    align-items: center;
+    padding: 0 5% 0 6%;
+    position: relative;
+    overflow: hidden;
+    gap: clamp(1rem, 5vw, 6rem);
 }
-
 .hero-content {
   display: flex;
   flex-direction: column;
